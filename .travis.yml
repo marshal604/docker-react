@@ -5,13 +5,33 @@ sudo: required
 services:
   - docker
 
-# 開始進行 CI 前需要做的前置行為, 建立 tag 方便 run 的時候呼叫
-# tag name 慣例是 dockerHub_name/app_name
-#before_install:
-#  - docker build -t spy10604/docker-react -f Dockerfile.dev .
+# 開始進行 CI 前需要做的前置行為, 建立 tag 方便 run 的時候
+# 呼叫 tag name 慣例是 dockerHub_name/app_name
+before_install:
+  - docker build -t spy10604/docker-react -f Dockerfile.dev .
 
-# --coverage 是為了避免 console 一直停留在互動的階段無法進行下一步
-#script:
-#  - docker run spy10604/docker-react npm run test -- --coverage
+#--watchAll=false 是為了避免 console 一直停留在互動的階段無法進行下一步
 script:
-  - docker-compose -f docker-compose.test.yml up
+  - docker run spy10604/docker-react npm run test -- --watchAll=false
+
+# 告訴 travis ci 要 deploy 到哪裡
+deploy:
+  # travis ci 本身有提供 elasticbeanstalk 的設定，所以直接用 provider 可以減少很多設定的步驟
+  provider: elasticbeanstalk
+  # 告訴用哪個區域的機器
+  region: "us-east-1"
+  # app 的名稱，通常會用 aws 命名好的 app name
+  app: "docker-react"
+  # app 要運行在什麼環境之下，參考 aws 上設定好的參數
+  env: "Dockerreact-env"
+  # build 好的檔案要放在 aws 哪個 bucket
+  bucket_name: "elasticbeanstalk-us-east-1-989896877158"
+  # bucket 中的哪個位置，若沒有找到的話，預設會自動創建資料夾
+  bucket_path: "docker-react"
+  # 什麼時候要做 deploy 的事情
+  on:
+    # 只有在 branch 是 master 的情況才做 deploy
+    branch: master
+  # 在 Travis CI setting 設定環境並使用才能在 aws 執行 API
+  access_key_id: $AWS_ACCESS_KEY
+  secret_access_key: "$AWS_SECRET_KEY"
