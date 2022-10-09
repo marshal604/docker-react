@@ -18,12 +18,32 @@ jobs:
     steps:
       # 使用別人做好的 action, 這個 action 是 checkout 到對應的 branch
       - uses: actions/checkout@v2
+
       - name: Login Docker
         # 執行登入 docker 的 command
         run: docker login -u ${{secrets.DOCKER_NAME}} -p "${{secrets.DOCKER_PASSWORD}}"
+
       - name: Build Docker
         # build test container
         run: docker build -t spy10604/react-docker -f Dockerfile.dev .
+
       - name: Testing
         # CI=true 可以避免 terminal 一直 watch, 也可以用 --watchAll=false 來取消 watcher
         run: docker run -e CI=true spy10604/react-docker npm run test
+
+      # 創建要放到 aws 的檔案
+      - name: Generate deployment package
+        run: zip -r deploy.zip . -x '*.git*'
+
+      - name: Deploy to ESB
+        # 使用別人做好可以上傳到 ESB 的 actions
+        uses: einaregilsson/beanstalk-deploy@v18
+        with:
+          aws_access_key: ${{ secrets.AWS_ACCESS_KEY }}
+          aws_secret_key: ${{ secrets.AWS_SECRET_KEY }}
+          application_name: "github-actions"
+          environment_name: "Githubactions-env"
+          existing_bucket_name: "elasticbeanstalk-us-east-1-989896877158"
+          region: "us-east-1"
+          version_label: ${{ github.sha }}
+          deployment_package: deploy.zip
