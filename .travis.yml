@@ -1,0 +1,15 @@
+# 使用 super 管理員的身份
+sudo: required
+
+# 使用 docker 的服務
+services:
+  - docker
+
+# 開始進行 CI 前需要做的前置行為, 建立 tag 方便 run 的時候呼叫
+# tag name 慣例是 dockerHub_name/app_name
+before_install:
+  - docker build -t spy10604/docker-react -f Dockerfile.dev .
+
+# --coverage 是為了避免 console 一直停留在互動的階段無法進行下一步
+script:
+  - docker run spy10604/docker-react npm run test -- --coverage
