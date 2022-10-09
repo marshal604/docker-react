@@ -1,0 +1,26 @@
+# flow name
+name: Frontend Deploy
+# 什麼時候觸發
+on:
+  # 在 push code 時觸發
+  push:
+    # 什麼 branch 要觸發
+    branches:
+      - "github-actions"
+
+# 觸發時要做什麼
+jobs:
+  # 要 build app
+  build:
+    # build 的環境
+    runs-on: ubuntu-latest
+    # build 依序要做哪些事情
+    steps:
+      # 使用別人做好的 action, 這個 action 是 checkout 到對應的 branch
+      - uses: actions/checkout@v2
+      # 執行登入 docker 的 command
+      - run: docker login -u ${{secrets.DOCKER_NAME}} -p ${{secrets.DOCKER_PASSWORD}}
+      # build test container
+      - run: docker build -t spy10604/react-docker -f Dockerfile.dev .
+      # CI=true 可以避免 terminal 一直 watch, 也可以用 --watchAll=false 來取消 watcher
+      - run: docker run -e CI=true spy10604/react-docker npm run test
