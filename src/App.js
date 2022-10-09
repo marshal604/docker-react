@@ -18,7 +18,7 @@ function App() {
         >
           Learn React
         </a>
-        <div>Feature branch</div>
+        <div>github actions</div>
       </header>
     </div>
   );
